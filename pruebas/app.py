@@ -27,3 +27,4 @@ def roles():
     cursor.close()
     conexionMySQL.close()
     return jsonify(resultadoSQL)
+
