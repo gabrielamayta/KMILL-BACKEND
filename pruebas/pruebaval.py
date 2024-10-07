@@ -1,28 +1,33 @@
 import mysql.connector
+from flask import Flask,jsonify 
 
-#Conexión con el servidor MySQL Server
-conexionMySQL = mysql.connector.connect(
-    host='10.9.120.5',
-    user='kmill',
-    passwd='kmill111',
-    db='kmill'
-)
 
-#Consulta SQL que ejecutaremos, en este caso un select
-sqlSelect = """SELECT id, nombre_rol
-           FROM Rol
-           ORDER BY id DESC
-           """
-#Establecemos un cursor para la conexión con el servidor MySQL
-cursor = conexionMySQL.cursor()
-#A partir del cursor, ejecutamos la consulta SQL
-cursor.execute(sqlSelect)
-#Guardamos el resultado de la consulta en una variable
-resultadoSQL = cursor.fetchall()
 
-#Cerramos el cursor y la conexión con MySQL
-cursor.close()
-conexionMySQL.close()
+app = Flask(__name__)
+@app.route('/Rol/<int:id>')
+def Roles(id):
 
-#Mostramos el resultado por pantalla
-print (resultadoSQL)
+    conexionMySQL = mysql.connector.connect(
+        host='10.9.120.5',
+        user='kmill',
+        passwd='kmill111',
+        db='kmill'
+    )
+
+    sqlSelect = """SELECT nombre_rol, id FROM Rol WHERE id = %s """
+
+    #Establecemos un cursor para la conexión con el servidor MySQL
+    cursor = conexionMySQL.cursor(dictionary=True)
+
+    #A partir del cursor, ejecutamos la consulta SQL
+    cursor.execute(sqlSelect, (id,))
+
+    #Guardamos el resultado de la consulta en una variable
+    resultadoSQL = cursor.fetchone()
+
+    #Cerramos el cursor y la conexión con MySQL
+    cursor.close()
+    conexionMySQL.close()
+    return jsonify(resultadoSQL)
+
+print(app.url_map)
