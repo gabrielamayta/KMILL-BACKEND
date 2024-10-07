@@ -22,3 +22,5 @@ cursor.close()
 conexion.close()
 
 print (resultadoSQL)
+
+
