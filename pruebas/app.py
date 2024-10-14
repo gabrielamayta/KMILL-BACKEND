@@ -53,7 +53,6 @@ def detalle_pedido(id):
     result = {"pedido": nropedido, "detalle pedido": detalle_pedido }
     return jsonify(result)
 
-<<<<<<< HEAD
 
 
 @app.route('/jsonproducto')
@@ -114,7 +113,7 @@ def producto_ingrediente(id):
 
 #       "Producto": product,
             #"Ingredientes": ingrediente 
-=======
+
 @app.route('/Pedido', methods = ('PUT',))
 def detalle_pedido(id):
     conexionMySQL = mysql.connector.connect(
@@ -140,4 +139,5 @@ def detalle_pedido(id):
     
     result = {"pedido": nropedido, "detalle pedido": detalle_pedido }
     return jsonify(result)
->>>>>>> c044ad017158cdfbec076717eadfe2e4d5f292b7
+
+
