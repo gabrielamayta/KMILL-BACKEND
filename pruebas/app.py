@@ -53,11 +53,17 @@ def detalle_pedido(id):
     result = {"pedido": nropedido, "detalle pedido": detalle_pedido }
     return jsonify(result)
 
-<<<<<<< HEAD
+# abajo de mika #
 
 
 @app.route('/jsonproducto')
 def producto():
+    conexionMySQL = mysql.connector.connect(
+        host='10.9.120.5',
+        user='kmill',
+        passwd='kmill111',
+        db='kmill'
+    )
     sqlSelect = """SELECT * FROM Producto"""
     cursor = conexionMySQL.cursor()
     cursor.execute(sqlSelect)
@@ -68,6 +74,12 @@ def producto():
 
 @app.route('/producto/<int:id>') 
 def detalle_producto(id):
+    conexionMySQL = mysql.connector.connect(
+        host='10.9.120.5',
+        user='kmill',
+        passwd='kmill111',
+        db='kmill'
+    )
     sqlSelect = """SELECT Nombre, Descripción, Precio, stock FROM Producto WHERE id = %s"""
     cursor = conexionMySQL.cursor()
     cursor.execute(sqlSelect, (id,))
@@ -80,6 +92,12 @@ def detalle_producto(id):
 
 @app.route('/categoria/<int:id>') 
 def detalle_categoria(id):
+    conexionMySQL = mysql.connector.connect(
+        host='10.9.120.5',
+        user='kmill',
+        passwd='kmill111',
+        db='kmill'
+    )
     sqlSelect = """SELECT Nombre FROM Categoria WHERE id = %s"""
     cursor = conexionMySQL.cursor()
     cursor.execute(sqlSelect, (id,))
@@ -91,12 +109,20 @@ def detalle_categoria(id):
 
 @app.route('/producto_ingrediente/<int:id>') 
 def producto_ingrediente(id):
+    conexionMySQL = mysql.connector.connect(
+        host='10.9.120.5',
+        user='kmill',
+        passwd='kmill111',
+        db='kmill'
+    )
     #consulta 1
     qProducto = """SELECT Nombre FROM Producto WHERE id = %s"""
     cursor = conexionMySQL.cursor()
     cursor.execute(qProducto, (id,))
     product = cursor.fetchone()
-    
+
+
+   
    # SELECT i.Nombre from Ingrediente i 
     #INNER join Ingredientes_Productos ip ON i.id = ip.id_Ingredientes
     #INNER JOIN Producto p ON ip.id_Producto = p.id
@@ -114,30 +140,6 @@ def producto_ingrediente(id):
 
 #       "Producto": product,
             #"Ingredientes": ingrediente 
-=======
-@app.route('/Pedido', methods = ('PUT',))
-def detalle_pedido(id):
-    conexionMySQL = mysql.connector.connect(
-        host='10.9.120.5',
-        user='kmill',
-        passwd='kmill111',
-        db='kmill'
-    )
-    #Consulta 1
-    qpedido = """SELECT id FROM Pedidos WHERE id = %s"""
-    db = conexionMySQL.cursor(dictionary=True)
-    db.execute(qpedido, (id,))
-    nropedido = db.fetchone()['id']
 
-    #Consulta 2
-    qdetalle_pedido = """SELECT * FROM Detalle_pedido WHERE id = %s"""
-    db.execute(qdetalle_pedido, (id,))
-    detalle_pedido = list(db)
 
-    #Cerramos el db y la conexión con MySQL
-    db.close()
-    conexionMySQL.close()
-    
-    result = {"pedido": nropedido, "detalle pedido": detalle_pedido }
-    return jsonify(result)
->>>>>>> c044ad017158cdfbec076717eadfe2e4d5f292b7
+ # arriba de mika #
