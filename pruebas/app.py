@@ -1,4 +1,5 @@
-from flask import Flask, jsonify
+
+from flask import Flask, jsonify, request
 import mysql.connector
 
 #Conexión con el servidor MySQL Server
@@ -86,7 +87,24 @@ def detalle_producto(id):
     resultadoSQL = cursor.fetchone()
 
     cursor.close()
-    conexionMySQL.close()
+    conexionMySQL.close()         
+    return jsonify(resultadoSQL)
+
+@app.route('/productoborrar/<int:id>', methods=['GET','DELETE']) 
+def borrar_producto(id):
+    conexionMySQL = mysql.connector.connect(
+        host='10.9.120.5',
+        user='kmill',
+        passwd='kmill111',
+        db='kmill'
+    )
+    sqlSelect = """ DELETE from Nombre, Descripción, Precio, stock FROM Producto WHERE id = %s"""
+    cursor = conexionMySQL.cursor()
+    cursor.execute(sqlSelect, (id,))
+    resultadoSQL = cursor.fetchone()
+
+    cursor.close()
+    conexionMySQL.close()         
     return jsonify(resultadoSQL)
 
 
@@ -99,7 +117,7 @@ def detalle_categoria(id):
         db='kmill'
     )
     sqlSelect = """SELECT Nombre FROM Categoria WHERE id = %s"""
-    cursor = conexionMySQL.cursor()
+    cursor = conexionMySQL.cursor()                                                        
     cursor.execute(sqlSelect, (id,))
     resultadoSQL = cursor.fetchone()
 
@@ -138,8 +156,33 @@ def producto_ingrediente(id):
             "ingredientes":  [ingredient[0] for ingredient in ingrediente] }
     return jsonify(resul)
 
-#       "Producto": product,
-            #"Ingredientes": ingrediente 
+  #       "Producto": product,
+  #"Ingredientes": ingrediente 
 
+@app.route('/filtroproducto/') 
+def filtro_producto():
+   filtro = None
 
- # arriba de mika #
+   if request.is_json:
+     if filtro in request.json:
+        filtro = request.json['filtro']
+
+    
+   conexionMySQL = mysql.connector.connect(
+        host='10.9.120.5',
+        user='kmill',
+        passwd='kmill111',
+        db='kmill'
+    )
+  
+   if filtro == None:
+    query = 'select * from Producto'
+    cursor = conexionMySQL.cursor()
+    result = cursor.execute(query,)
+   elif filtro != None : 
+    query = 'SELECT * FROM Producto where Nombre LIKE "%" || ? || "%"'
+    cursor = conexionMySQL.cursor()
+    result = cursor.execute(query, (filtro,))
+
+    return result
+  # arriba de mika 
