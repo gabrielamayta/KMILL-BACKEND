@@ -1,5 +1,5 @@
 import mysql.connector
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 import requests 
 
 app = Flask(__name__)
@@ -25,7 +25,8 @@ def ingredient(id):
     conexionMySQL.close()
     return jsonify(resultadoSQL)
 
-@app.route('/ingrediente_producto/<int:id>')
+#--------/Filtrado/---------
+@app.route('/ingrediente_producto/<int:id>', methods=['GET'])
 def ingredientProduct(id):
     # Conexión con el servidor MySQL
     conexionMySQL = mysql.connector.connect(
@@ -35,6 +36,9 @@ def ingredientProduct(id):
         db='kmill'
     )
     
+    # Obtener el parámetro de búsqueda si se proporciona
+    nombre_ingrediente = request.args.get('nombre', default='', type=str)
+
     # Consulta SQL para obtener los ingredientes de un producto específico
     sqlSelect = """
     SELECT i.Nombre, ip.id_Ingredientes
@@ -43,11 +47,18 @@ def ingredientProduct(id):
     WHERE ip.id_Producto = %s
     """
     
+    # Agregar condición de filtrado si se proporciona un nombre
+    if nombre_ingrediente:
+        sqlSelect += " AND i.Nombre LIKE %s"
+        params = (id, f'%{nombre_ingrediente}%')
+    else:
+        params = (id,)
+    
     # Establecemos un cursor para la conexión con el servidor MySQL
     cursor = conexionMySQL.cursor(dictionary=True)
     
     # Ejecutamos la consulta SQL
-    cursor.execute(sqlSelect, (id,))
+    cursor.execute(sqlSelect, params)
     
     # Guardamos el resultado de la consulta en una variable
     resultadoSQL = cursor.fetchall()
@@ -57,6 +68,7 @@ def ingredientProduct(id):
     conexionMySQL.close()
     
     return jsonify(resultadoSQL)
+
 
 
 print("??")
