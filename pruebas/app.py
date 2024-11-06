@@ -274,22 +274,22 @@ def ingredientProduct(id):
 
 #codigo copiado de mika
 
-@app.route('/producto/<int:id>') 
-def detalle_producto(id):
-    conexionMySQL = mysql.connector.connect(
-        host='10.9.120.5',
-        user='kmill',
-        passwd='kmill111',
-        db='kmill'
-    )
-    sqlSelect = """SELECT Nombre, Descripción, Precio, stock FROM Producto WHERE id = %s"""
-    cursor = conexionMySQL.cursor()
-    cursor.execute(sqlSelect, (id,))
-    resultadoSQL = cursor.fetchone()
-
-    cursor.close()
-    conexionMySQL.close()         
-    return jsonify(resultadoSQL)
+#@app.route('/producto/<int:id>') 
+#def detalle_producto(id):
+#    conexionMySQL = mysql.connector.connect(
+#        host='10.9.120.5',
+#        user='kmill',
+#        passwd='kmill111',
+#        db='kmill'
+#    )
+#    sqlSelect = """SELECT Nombre, Descripción, Precio, stock FROM Producto WHERE id = %s"""
+#    cursor = conexionMySQL.cursor()
+#    cursor.execute(sqlSelect, (id,))
+#    resultadoSQL = cursor.fetchone()
+#
+#    cursor.close()
+#    conexionMySQL.close()         
+#    return jsonify(resultadoSQL)
 
 # Resto de tu código...
 @app.route('/register', methods=['POST'])
@@ -426,33 +426,48 @@ print(app.url_map)
 
 #Codigo mai
 
-
-
-@app.route('/detalle_pedido/<int:id>')
-def detalle_pedido(id):
+@app.route('/productopedido')
+def producto_pedido():
     conexionMySQL = mysql.connector.connect(
         host='10.9.120.5',
         user='kmill',
         passwd='kmill111',
         db='kmill'
     )
-    #Consulta 1
-    qpedido = """SELECT id FROM Pedidos WHERE id = %s"""
-    db = conexionMySQL.cursor(dictionary=True)
-    db.execute(qpedido, (id,))
-    nropedido = db.fetchone()['id']
-
-    #Consulta 2
-    qdetalle_pedido = """SELECT * FROM Detalle_pedido WHERE id = %s"""
-    db.execute(qdetalle_pedido, (id,))
-    detalle_pedido = list(db)
-
-    #Cerramos el db y la conexión con MySQL
-    db.close()
-    conexionMySQL.close()
+    cursor = conexionMySQL.cursor(dictionary=True)
+    sqlSelect = """SELECT id, Nombre, Descripcion, Precio, imagen FROM Producto"""
+    cursor.execute(sqlSelect)
+    productos = cursor.fetchall()
     
-    result = {"pedido": nropedido, "detalle pedido": detalle_pedido }
-    return jsonify(result)
+    cursor.close()
+    conexionMySQL.close()
+    return jsonify(productos)
+
+#@app.route('/detalle_pedido/<int:id>')
+#def detalle_pedido(id):
+#    conexionMySQL = mysql.connector.connect(
+#        host='10.9.120.5',
+#        user='kmill',
+#        passwd='kmill111',
+#        db='kmill'
+#    )
+#    #Consulta 1
+#    qpedido = """SELECT id FROM Pedidos WHERE id = %s"""
+#    db = conexionMySQL.cursor(dictionary=True)
+#    db.execute(qpedido, (id,))
+#    nropedido = db.fetchone()['id']
+#
+#    #Consulta 2
+#    qdetalle_pedido = """SELECT * FROM Detalle_pedido WHERE id = %s"""
+#    db.execute(qdetalle_pedido, (id,))
+#    detalle_pedido = list(db)
+#
+#    #Cerramos el db y la conexión con MySQL
+#    db.close()
+#    conexionMySQL.close()
+#    
+#    result = {"pedido": nropedido, "detalle pedido": detalle_pedido }
+#    return jsonify(result)
 
 
 @app.route('/detalle_pedidos')
