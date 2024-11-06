@@ -452,6 +452,7 @@ print(app.url_map)
 #Codigo mai
 
 
+<<<<<<< HEAD
 #
 #@app.route('/detalle_pedido/<int:id>')
 #def detalle_pedido(id):
@@ -478,6 +479,9 @@ print(app.url_map)
 #    
 #    result = {"pedido": nropedido, "detalle pedido": detalle_pedido }
 #    return jsonify(result)
+=======
+
+>>>>>>> c5d69efcf560c6b730c912c3079a890d84765189
 
 
 @app.route('/detalle_pedidos')
@@ -507,28 +511,6 @@ def detalle_pedidos():
 
     return jsonify({'pedidos': detalle_pedidos})
 
-
-@app.route('/detalle_pedidos/<int:id_producto>')
-def detalle_pedidos_por_producto(id_producto):
-    conexionMySQL = mysql.connector.connect(
-        host='10.9.120.5',
-        user='kmill',
-        passwd='kmill111',
-        db='kmill'
-    )
-
-    query = """
-        SELECT * FROM Detalle_pedido
-        WHERE id_producto = %s
-    """
-    db = conexionMySQL.cursor(dictionary=True)
-    db.execute(query, (id_producto,))
-    detalle_pedidos = list(db)
-
-    db.close()
-    conexionMySQL.close()
-
-    return jsonify({'pedidos': detalle_pedidos})
 
 
 
