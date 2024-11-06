@@ -1,4 +1,5 @@
-
+import jwt
+import datetime
 from flask import Flask, jsonify, request
 import mysql.connector
 from flask_cors import CORS
@@ -272,24 +273,7 @@ def ingredientProduct(id):
     
     return jsonify(resultadoSQL)
 
-#codigo copiado de mika
 
-@app.route('/producto/<int:id>') 
-def detalle_producto(id):
-    conexionMySQL = mysql.connector.connect(
-        host='10.9.120.5',
-        user='kmill',
-        passwd='kmill111',
-        db='kmill'
-    )
-    sqlSelect = """SELECT Nombre, Descripción, Precio, stock FROM Producto WHERE id = %s"""
-    cursor = conexionMySQL.cursor()
-    cursor.execute(sqlSelect, (id,))
-    resultadoSQL = cursor.fetchone()
-
-    cursor.close()
-    conexionMySQL.close()         
-    return jsonify(resultadoSQL)
 
 # Resto de tu código...
 @app.route('/register', methods=['POST'])
@@ -300,12 +284,21 @@ def register():
     nombre = data.get('nombre')
     apellido = data.get('apellido')
     email = data.get('email')
-    telefono = data.get('telefono')  # Asegúrate de que este sea el nombre correcto
+    telefono = data.get('telefono')
     password = data.get('password')
 
     if not all([nombre, apellido, email, telefono, password]):
         return jsonify({"message": "Faltan datos"}), 400
 
+    # Determinar el rol basado en el dominio del correo
+    if '@kmill.com' in email:
+        rol_id = 1  # Admin
+    elif '@gmail.com' in email:
+        rol_id = 2  # Usuario
+    else:
+        return jsonify({"message": "Correo no válido para registro"}), 400
+
+    # Conexión a la base de datos MySQL
     conexionMySQL = mysql.connector.connect(
         host='10.9.120.5',
         user='kmill',
@@ -313,14 +306,22 @@ def register():
         db='kmill'
     )
 
-    sqlInsert = """INSERT INTO Usuario (Nombre, Apellido, Email, teléfono, Password) 
-                   VALUES (%s, %s, %s, %s, %s)"""
-
-    cursor = conexionMySQL.cursor()
-    
     try:
+        cursor = conexionMySQL.cursor()
+
+        # Insertar el usuario en la tabla Usuario
+        sqlInsert = """INSERT INTO Usuario (Nombre, Apellido, Email, teléfono, Password) 
+                       VALUES (%s, %s, %s, %s, %s)"""
         cursor.execute(sqlInsert, (nombre, apellido, email, telefono, password))
-        conexionMySQL.commit()
+        usuario_id = cursor.lastrowid  # Obtener el ID del nuevo usuario insertado
+
+        # Insertar el rol en la tabla Usuario_rol
+        sqlInsertRol = """INSERT INTO Usuario_rol (id_usuario, id_rol) 
+                          VALUES (%s, %s)"""
+        cursor.execute(sqlInsertRol, (usuario_id, rol_id))
+
+        conexionMySQL.commit()  # Confirmar los cambios
+        print(f"Rol {rol_id} insertado para el usuario {usuario_id}")
         response = jsonify({"message": "Usuario registrado exitosamente"})
         response.status_code = 201
     except mysql.connector.Error as err:
@@ -334,6 +335,8 @@ def register():
 
     return response
 
+
+
 ##ruta de login
 @app.route('/login', methods=['POST'])
 def login():
@@ -342,26 +345,48 @@ def login():
     password = data.get('password')
 
     if not email or not password:
-        return jsonify({"message": "Faltan datos"}), 400
-    
-    # Aquí debes verificar las credenciales en tu base de datos
+        return jsonify({"message": "Correo o contraseña faltantes"}), 400
+
+    # Consultar el usuario por email
     conexionMySQL = mysql.connector.connect(
         host='10.9.120.5',
         user='kmill',
         passwd='kmill111',
         db='kmill'
     )
-    cursor = conexionMySQL.cursor()
-    cursor.execute("SELECT * FROM Usuario WHERE Email = %s AND Password = %s", (email, password))
-    user = cursor.fetchone()
 
-    cursor.close()
-    conexionMySQL.close()
+    try:
+        cursor = conexionMySQL.cursor(dictionary=True)
 
-    if user:
-        return jsonify({"message": "Inicio de sesión exitoso"}), 200
-    else:
-        return jsonify({"message": "Credenciales incorrectas"}), 401
+        # Buscar el usuario por email
+        cursor.execute("SELECT * FROM Usuario WHERE Email = %s", (email,))
+        usuario = cursor.fetchone()
+
+        if usuario and usuario['Password'] == password:
+            # Obtener el rol del usuario
+            cursor.execute("""SELECT r.nombre_rol
+                              FROM Rol r
+                              JOIN Usuario_rol ur ON r.id = ur.id_rol
+                              WHERE ur.id_usuario = %s""", (usuario['id'],))
+            rol = cursor.fetchone()
+
+            if rol:
+                return jsonify({
+                    "message": "Inicio de sesión exitoso",
+                    "email": usuario['Email'],
+                    "role": rol['nombre_rol']
+                })
+            else:
+                return jsonify({"message": "No se encontró rol para este usuario"}), 404
+        else:
+            return jsonify({"message": "Correo o contraseña incorrectos"}), 401
+
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+        return jsonify({"message": "Error en la base de datos", "error": str(err)}), 500
+    finally:
+        cursor.close()
+        conexionMySQL.close()
 
 
 
@@ -427,32 +452,32 @@ print(app.url_map)
 #Codigo mai
 
 
-
-@app.route('/detalle_pedido/<int:id>')
-def detalle_pedido(id):
-    conexionMySQL = mysql.connector.connect(
-        host='10.9.120.5',
-        user='kmill',
-        passwd='kmill111',
-        db='kmill'
-    )
-    #Consulta 1
-    qpedido = """SELECT id FROM Pedidos WHERE id = %s"""
-    db = conexionMySQL.cursor(dictionary=True)
-    db.execute(qpedido, (id,))
-    nropedido = db.fetchone()['id']
-
-    #Consulta 2
-    qdetalle_pedido = """SELECT * FROM Detalle_pedido WHERE id = %s"""
-    db.execute(qdetalle_pedido, (id,))
-    detalle_pedido = list(db)
-
-    #Cerramos el db y la conexión con MySQL
-    db.close()
-    conexionMySQL.close()
-    
-    result = {"pedido": nropedido, "detalle pedido": detalle_pedido }
-    return jsonify(result)
+#
+#@app.route('/detalle_pedido/<int:id>')
+#def detalle_pedido(id):
+#    conexionMySQL = mysql.connector.connect(
+#        host='10.9.120.5',
+#        user='kmill',
+#        passwd='kmill111',
+#        db='kmill'
+#    )
+#    #Consulta 1
+#    qpedido = """SELECT id FROM Pedidos WHERE id = %s"""
+#    db = conexionMySQL.cursor(dictionary=True)
+#    db.execute(qpedido, (id,))
+#    nropedido = db.fetchone()['id']
+#
+#    #Consulta 2
+#    qdetalle_pedido = """SELECT * FROM Detalle_pedido WHERE id = %s"""
+#    db.execute(qdetalle_pedido, (id,))
+#    detalle_pedido = list(db)
+#
+#    #Cerramos el db y la conexión con MySQL
+#    db.close()
+#    conexionMySQL.close()
+#    
+#    result = {"pedido": nropedido, "detalle pedido": detalle_pedido }
+#    return jsonify(result)
 
 
 @app.route('/detalle_pedidos')
