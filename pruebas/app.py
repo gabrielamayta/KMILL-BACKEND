@@ -330,7 +330,7 @@ def register():
         # Insertar el usuario en la tabla Usuario
         sqlInsert = """INSERT INTO Usuario (Nombre, Apellido, Email, teléfono, Password) 
                        VALUES (%s, %s, %s, %s, %s)"""
-        cursor.execute(sqlInsert, (nombre, apellido, email, telefono, password))
+        cursor.execute(sqlInsert, (nombre, apellido,  email, telefono, password))
         usuario_id = cursor.lastrowid  # Obtener el ID del nuevo usuario insertado
 
         # Insertar el rol en la tabla Usuario_rol
