@@ -274,6 +274,7 @@ def ingredientProduct(id):
     
     return jsonify(resultadoSQL)
 
+
 #@app.route('/producto/<int:id>') 
 #def detalle_producto(id):
 #    conexionMySQL = mysql.connector.connect(
@@ -504,10 +505,17 @@ print(app.url_map)
 
 
 
-#Codigo mai
 
-@app.route('/productopedido')
-def producto_pedido():
+
+
+#Codigo maiLEN
+
+
+
+
+
+@app.route('/cookiepedido')
+def cookie_pedido():
     conexionMySQL = mysql.connector.connect(
         host='10.9.120.5',
         user='kmill',
@@ -515,14 +523,104 @@ def producto_pedido():
         db='kmill'
     )
     cursor = conexionMySQL.cursor(dictionary=True)
-    sqlSelect = """SELECT id, Nombre, Descripcion, Precio, imagen FROM Producto"""
+    sqlSelect = """SELECT id, Nombre, Descripcion, Precio, imagen FROM Producto WHERE Nombre LIKE 'Cookie%'"""
     cursor.execute(sqlSelect)
-    productos = cursor.fetchall()
+    cookies = cursor.fetchall()
     
     cursor.close()
     conexionMySQL.close()
-    return jsonify(productos)
+    return jsonify(cookies)
 
+
+@app.route('/alfajorpedido')
+def alfajor_pedido():
+    conexionMySQL = mysql.connector.connect(
+        host='10.9.120.5',
+        user='kmill',
+        passwd='kmill111',
+        db='kmill'
+    )
+    cursor = conexionMySQL.cursor(dictionary=True)
+    sqlSelect = """SELECT id, Nombre, Descripcion, Precio, imagen FROM Producto WHERE Nombre LIKE 'Alfajor%'"""
+    cursor.execute(sqlSelect)
+    alfajores = cursor.fetchall()
+    
+    cursor.close()
+    conexionMySQL.close()
+    return jsonify(alfajores)
+
+
+@app.route('/cupcakepedido')
+def cupcake_pedido():
+    conexionMySQL = mysql.connector.connect(
+        host='10.9.120.5',
+        user='kmill',
+        passwd='kmill111',
+        db='kmill'
+    )
+    cursor = conexionMySQL.cursor(dictionary=True)
+    sqlSelect = """SELECT id, Nombre, Descripcion, Precio, imagen FROM Producto WHERE Nombre LIKE 'Cupcake%'"""
+    cursor.execute(sqlSelect)
+    cupcakes = cursor.fetchall()
+    
+    cursor.close()
+    conexionMySQL.close()
+    return jsonify(cupcakes)
+
+@app.route('/pedidos', methods=['POST'])
+def pedidos():
+    data = request.get_json()
+    print("Datos recibidos:", data)  # Para depuración
+
+    estado = data.get('estado')
+    usuario = data.get('usuario')
+    fecha = data.get('fecha')
+    metodopago = data.get('metodopago')
+    ####################################
+    pedido = data.get('pedido')
+    producto = data.get('producto')
+    cantidad = data.get('cantidad')
+    precio = data.get('precio')
+
+    if not all([pedido, estado, usuario, fecha, metodopago]):
+        return jsonify({"message": "Faltan datos"}), 400
+
+    # Conexión a la base de datos MySQL
+    conexionMySQL = mysql.connector.connect(
+        host='10.9.120.5',
+        user='kmill',
+        passwd='kmill111',
+        db='kmill'
+    )
+
+    try:
+        cursor = conexionMySQL.cursor()
+
+        # Insertar el usuario en la tabla Usuario
+        sqlInsert = """INSERT INTO Pedidos (estado, id_Usuario_rol, fecha_pedido, forma_pago) 
+                       VALUES (%s, %s, %s, %s)"""
+        cursor.execute(sqlInsert, (estado, usuario, fecha, metodopago))
+        usuario_id = cursor.lastrowid  # Obtener el ID del nuevo usuario insertado
+
+        # Insertar el rol en la tabla Usuario_rol
+        sqlInsertRol = """INSERT INTO Detalle_pedido (id_pedidos, id_producto, cantidad, precio_unitario) 
+                          VALUES (%s, %s, %s, %s)"""
+        cursor.execute(sqlInsertRol, (pedido, producto, cantidad, precio))
+
+        conexionMySQL.commit()  # Confirmar los cambios
+        print(f"Detalle pedido {id} insertado para el pedido {pedido}")
+        response = jsonify({"message": "Usuario registrado exitosamente"})
+        response.status_code = 201
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")  # Imprime el error específico
+        conexionMySQL.rollback()
+        response = jsonify({"message": "Error al registrar el usuario", "error": str(err)})
+        response.status_code = 400
+    finally:
+        cursor.close()
+        conexionMySQL.close()
+
+    return response
 
 #@app.route('/detalle_pedido/<int:id>')
 #def detalle_pedido(id):
@@ -551,33 +649,32 @@ def producto_pedido():
 #    return jsonify(result)
 
 
-
-@app.route('/detalle_pedidos')
-def detalle_pedidos():
-    page = request.args.get('page', 1, type=int)  # Obtener la página, por defecto 1
-    per_page = 5  # Número de elementos por página
-
-    conexionMySQL = mysql.connector.connect(
-        host='10.9.120.5',
-        user='kmill',
-        passwd='kmill111',
-        db='kmill'
-    )
-
-    # Consulta paginada
-    qdetalle_pedidos = """
-        SELECT * FROM Detalle_pedido
-        LIMIT %(per_page)s OFFSET %(offset)s
-    """
-    db = conexionMySQL.cursor(dictionary=True)
-    db.execute(qdetalle_pedidos, {'per_page': per_page, 'offset': (page - 1) * per_page})
-    detalle_pedidos = list(db)
-
-    # Cerramos el db y la conexión con MySQL
-    db.close()
-    conexionMySQL.close()
-
-    return jsonify({'pedidos': detalle_pedidos})
+#@app.route('/detalle_pedidos')
+#def detalle_pedidos():
+#    page = request.args.get('page', 1, type=int)  # Obtener la página, por defecto 1
+#    per_page = 5  # Número de elementos por página
+#
+#    conexionMySQL = mysql.connector.connect(
+#        host='10.9.120.5',
+#        user='kmill',
+#        passwd='kmill111',
+#        db='kmill'
+#    )
+#
+#    # Consulta paginada
+#    qdetalle_pedidos = """
+#        SELECT * FROM Detalle_pedido
+#        LIMIT %(per_page)s OFFSET %(offset)s
+#    """
+#    db = conexionMySQL.cursor(dictionary=True)
+#    db.execute(qdetalle_pedidos, {'per_page': per_page, 'offset': (page - 1) * per_page})
+#    detalle_pedidos = list(db)
+#
+#    # Cerramos el db y la conexión con MySQL
+#    db.close()
+#    conexionMySQL.close()
+#
+#    return jsonify({'pedidos': detalle_pedidos})
 
 
 
@@ -617,3 +714,6 @@ def Roles(id):
     return jsonify(resultadoSQL)
 
 print(app.url_map)
+
+#MAI
+
