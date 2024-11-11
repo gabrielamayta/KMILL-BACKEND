@@ -3,6 +3,7 @@ import datetime
 from flask import Flask, jsonify, request
 import mysql.connector
 from flask_cors import CORS
+from werkzeug.security import check_password_hash, generate_password_hash
 #Conexión con el servidor MySQL Server
 
 app = Flask(__name__)
@@ -273,7 +274,6 @@ def ingredientProduct(id):
     
     return jsonify(resultadoSQL)
 
-
 #@app.route('/producto/<int:id>') 
 #def detalle_producto(id):
 #    conexionMySQL = mysql.connector.connect(
@@ -324,11 +324,13 @@ def register():
 
     try:
         cursor = conexionMySQL.cursor()
+        # calculo el hash del password
+        password=generate_password_hash(password)
 
         # Insertar el usuario en la tabla Usuario
         sqlInsert = """INSERT INTO Usuario (Nombre, Apellido, Email, teléfono, Password) 
                        VALUES (%s, %s, %s, %s, %s)"""
-        cursor.execute(sqlInsert, (nombre, apellido, email, telefono, password))
+        cursor.execute(sqlInsert, (nombre, apellido,  email, telefono, password))
         usuario_id = cursor.lastrowid  # Obtener el ID del nuevo usuario insertado
 
         # Insertar el rol en la tabla Usuario_rol
@@ -378,7 +380,7 @@ def login():
         cursor.execute("SELECT * FROM Usuario WHERE Email = %s", (email,))
         usuario = cursor.fetchone()
 
-        if usuario and usuario['Password'] == password:
+        if usuario and check_password_hash(usuario['Password'], password):
             # Obtener el rol del usuario
             cursor.execute("""SELECT r.nombre_rol
                               FROM Rol r
