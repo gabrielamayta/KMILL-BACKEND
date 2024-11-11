@@ -406,6 +406,43 @@ def login():
         cursor.close()
         conexionMySQL.close()
 
+##ruta de modificar productos
+@app.route('/productoActualizar/<int:id>', methods=['PUT'])
+def actualizar_producto(id):
+    # Conexión a la base de datos MySQL
+    conexionMySQL = mysql.connector.connect(
+        host='10.9.120.5',
+        user='kmill',
+        passwd='kmill111',
+        db='kmill'
+    )
+
+    data = request.get_json()  # Obtener los datos enviados en el cuerpo de la solicitud
+
+    # Asegurarse de que los datos necesarios estén presentes
+    nombre = data.get('nombre')
+    descripcion = data.get('descripcion')
+    precio = data.get('precio')
+
+    if not nombre or not descripcion or not precio:
+        return jsonify({"message": "Faltan datos necesarios"}), 400
+
+    try:
+        cursor = conexionMySQL.cursor()
+
+        # Consulta para actualizar el producto
+        sqlUpdate = """UPDATE Producto 
+                       SET Nombre = %s, Descripcion = %s, Precio = %s
+                       WHERE id = %s"""
+        cursor.execute(sqlUpdate, (nombre, descripcion, precio, id))
+
+        conexionMySQL.commit()  # Confirmar los cambios
+        cursor.close()
+        conexionMySQL.close()
+
+        return jsonify({"message": "Producto actualizado exitosamente"}), 200
+    except mysql.connector.Error as err:
+        return jsonify({"message": "Error al actualizar el producto", "error": str(err)}), 500
 
 
 ##ruta de precio
