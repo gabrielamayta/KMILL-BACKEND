@@ -469,7 +469,6 @@ print(app.url_map)
 
 #Codigo mai
 
-
 @app.route('/productopedido')
 def producto_pedido():
     conexionMySQL = mysql.connector.connect(
