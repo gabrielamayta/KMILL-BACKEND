@@ -3,6 +3,7 @@ import datetime
 from flask import Flask, jsonify, request
 import mysql.connector
 from flask_cors import CORS
+from werkzeug.security import check_password_hash, generate_password_hash
 #Conexión con el servidor MySQL Server
 
 app = Flask(__name__)
@@ -273,8 +274,6 @@ def ingredientProduct(id):
     
     return jsonify(resultadoSQL)
 
-
-<<<<<<< HEAD
 #@app.route('/producto/<int:id>') 
 #def detalle_producto(id):
 #    conexionMySQL = mysql.connector.connect(
@@ -291,8 +290,6 @@ def ingredientProduct(id):
 #    cursor.close()
 #    conexionMySQL.close()         
 #    return jsonify(resultadoSQL)
-=======
->>>>>>> 790ae43cce6f436d84abdbe04a2d061c9353e2bd
 
 # Resto de tu código...
 @app.route('/register', methods=['POST'])
@@ -327,6 +324,8 @@ def register():
 
     try:
         cursor = conexionMySQL.cursor()
+        # calculo el hash del password
+        password=generate_password_hash(password)
 
         # Insertar el usuario en la tabla Usuario
         sqlInsert = """INSERT INTO Usuario (Nombre, Apellido, Email, teléfono, Password) 
@@ -381,7 +380,7 @@ def login():
         cursor.execute("SELECT * FROM Usuario WHERE Email = %s", (email,))
         usuario = cursor.fetchone()
 
-        if usuario and usuario['Password'] == password:
+        if usuario and check_password_hash(usuario['Password'], password):
             # Obtener el rol del usuario
             cursor.execute("""SELECT r.nombre_rol
                               FROM Rol r
@@ -470,7 +469,7 @@ print(app.url_map)
 
 #Codigo mai
 
-<<<<<<< HEAD
+
 @app.route('/productopedido')
 def producto_pedido():
     conexionMySQL = mysql.connector.connect(
@@ -488,11 +487,7 @@ def producto_pedido():
     conexionMySQL.close()
     return jsonify(productos)
 
-=======
 
-<<<<<<< HEAD
-#
->>>>>>> 790ae43cce6f436d84abdbe04a2d061c9353e2bd
 #@app.route('/detalle_pedido/<int:id>')
 #def detalle_pedido(id):
 #    conexionMySQL = mysql.connector.connect(
@@ -518,12 +513,7 @@ def producto_pedido():
 #    
 #    result = {"pedido": nropedido, "detalle pedido": detalle_pedido }
 #    return jsonify(result)
-<<<<<<< HEAD
-=======
-=======
 
->>>>>>> c5d69efcf560c6b730c912c3079a890d84765189
->>>>>>> 790ae43cce6f436d84abdbe04a2d061c9353e2bd
 
 
 @app.route('/detalle_pedidos')
