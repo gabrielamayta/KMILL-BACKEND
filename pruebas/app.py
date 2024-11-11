@@ -3,6 +3,7 @@ import datetime
 from flask import Flask, jsonify, request
 import mysql.connector
 from flask_cors import CORS
+from werkzeug.security import check_password_hash, generate_password_hash
 #Conexión con el servidor MySQL Server
 
 app = Flask(__name__)
@@ -324,11 +325,13 @@ def register():
 
     try:
         cursor = conexionMySQL.cursor()
+        # calculo el hash del password
+        password=generate_password_hash(password)
 
         # Insertar el usuario en la tabla Usuario
         sqlInsert = """INSERT INTO Usuario (Nombre, Apellido, Email, teléfono, Password) 
                        VALUES (%s, %s, %s, %s, %s)"""
-        cursor.execute(sqlInsert, (nombre, apellido, email, telefono, password))
+        cursor.execute(sqlInsert, (nombre, apellido,  email, telefono, password))
         usuario_id = cursor.lastrowid  # Obtener el ID del nuevo usuario insertado
 
         # Insertar el rol en la tabla Usuario_rol
@@ -378,7 +381,7 @@ def login():
         cursor.execute("SELECT * FROM Usuario WHERE Email = %s", (email,))
         usuario = cursor.fetchone()
 
-        if usuario and usuario['Password'] == password:
+        if usuario and check_password_hash(usuario['Password'], password):
             # Obtener el rol del usuario
             cursor.execute("""SELECT r.nombre_rol
                               FROM Rol r
@@ -568,7 +571,7 @@ def pedidos():
         cursor.execute(sqlInsertRol, (pedido, producto, cantidad, precio))
 
         conexionMySQL.commit()  # Confirmar los cambios
-        print(f"Detalle pedido {detalle_pedido_id} insertado para el pedido {pedido_id}")
+        print(f"Detalle pedido {id} insertado para el pedido {pedido}")
         response = jsonify({"message": "Usuario registrado exitosamente"})
         response.status_code = 201
     except mysql.connector.Error as err:
@@ -608,32 +611,33 @@ def pedidos():
 #    result = {"pedido": nropedido, "detalle pedido": detalle_pedido }
 #    return jsonify(result)
 
-@app.route('/detalle_pedidos')
-def detalle_pedidos():
-    page = request.args.get('page', 1, type=int)  # Obtener la página, por defecto 1
-    per_page = 5  # Número de elementos por página
 
-    conexionMySQL = mysql.connector.connect(
-        host='10.9.120.5',
-        user='kmill',
-        passwd='kmill111',
-        db='kmill'
-    )
-
-    # Consulta paginada
-    qdetalle_pedidos = """
-        SELECT * FROM Detalle_pedido
-        LIMIT %(per_page)s OFFSET %(offset)s
-    """
-    db = conexionMySQL.cursor(dictionary=True)
-    db.execute(qdetalle_pedidos, {'per_page': per_page, 'offset': (page - 1) * per_page})
-    detalle_pedidos = list(db)
-
-    # Cerramos el db y la conexión con MySQL
-    db.close()
-    conexionMySQL.close()
-
-    return jsonify({'pedidos': detalle_pedidos})
+#@app.route('/detalle_pedidos')
+#def detalle_pedidos():
+#    page = request.args.get('page', 1, type=int)  # Obtener la página, por defecto 1
+#    per_page = 5  # Número de elementos por página
+#
+#    conexionMySQL = mysql.connector.connect(
+#        host='10.9.120.5',
+#        user='kmill',
+#        passwd='kmill111',
+#        db='kmill'
+#    )
+#
+#    # Consulta paginada
+#    qdetalle_pedidos = """
+#        SELECT * FROM Detalle_pedido
+#        LIMIT %(per_page)s OFFSET %(offset)s
+#    """
+#    db = conexionMySQL.cursor(dictionary=True)
+#    db.execute(qdetalle_pedidos, {'per_page': per_page, 'offset': (page - 1) * per_page})
+#    detalle_pedidos = list(db)
+#
+#    # Cerramos el db y la conexión con MySQL
+#    db.close()
+#    conexionMySQL.close()
+#
+#    return jsonify({'pedidos': detalle_pedidos})
 
 
 
