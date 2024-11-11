@@ -530,6 +530,8 @@ def cupcake_pedido():
     conexionMySQL.close()
     return jsonify(cupcakes)
 
+###############################################################################################################
+
 @app.route('/pedidos', methods=['POST'])
 def pedidos():
     data = request.get_json()
@@ -572,12 +574,12 @@ def pedidos():
 
         conexionMySQL.commit()  # Confirmar los cambios
         print(f"Detalle pedido {id} insertado para el pedido {pedido}")
-        response = jsonify({"message": "Usuario registrado exitosamente"})
+        response = jsonify({"message": "Pedido procesado exitosamente"})
         response.status_code = 201
     except mysql.connector.Error as err:
         print(f"Error: {err}")  # Imprime el error específico
         conexionMySQL.rollback()
-        response = jsonify({"message": "Error al registrar el usuario", "error": str(err)})
+        response = jsonify({"message": "Error al procesar el pedido", "error": str(err)})
         response.status_code = 400
     finally:
         cursor.close()
@@ -677,6 +679,3 @@ def Roles(id):
     return jsonify(resultadoSQL)
 
 print(app.url_map)
-
-#MAI
-
