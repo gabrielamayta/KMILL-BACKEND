@@ -274,7 +274,6 @@ def ingredientProduct(id):
     return jsonify(resultadoSQL)
 
 
-<<<<<<< HEAD
 #@app.route('/producto/<int:id>') 
 #def detalle_producto(id):
 #    conexionMySQL = mysql.connector.connect(
@@ -291,8 +290,6 @@ def ingredientProduct(id):
 #    cursor.close()
 #    conexionMySQL.close()         
 #    return jsonify(resultadoSQL)
-=======
->>>>>>> 790ae43cce6f436d84abdbe04a2d061c9353e2bd
 
 # Resto de tu código...
 @app.route('/register', methods=['POST'])
@@ -470,7 +467,6 @@ print(app.url_map)
 
 #Codigo mai
 
-<<<<<<< HEAD
 @app.route('/productopedido')
 def producto_pedido():
     conexionMySQL = mysql.connector.connect(
@@ -488,11 +484,7 @@ def producto_pedido():
     conexionMySQL.close()
     return jsonify(productos)
 
-=======
 
-<<<<<<< HEAD
-#
->>>>>>> 790ae43cce6f436d84abdbe04a2d061c9353e2bd
 #@app.route('/detalle_pedido/<int:id>')
 #def detalle_pedido(id):
 #    conexionMySQL = mysql.connector.connect(
@@ -518,12 +510,7 @@ def producto_pedido():
 #    
 #    result = {"pedido": nropedido, "detalle pedido": detalle_pedido }
 #    return jsonify(result)
-<<<<<<< HEAD
-=======
-=======
 
->>>>>>> c5d69efcf560c6b730c912c3079a890d84765189
->>>>>>> 790ae43cce6f436d84abdbe04a2d061c9353e2bd
 
 
 @app.route('/detalle_pedidos')
