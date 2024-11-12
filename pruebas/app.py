@@ -445,6 +445,45 @@ def actualizar_producto(id):
     except mysql.connector.Error as err:
         return jsonify({"message": "Error al actualizar el producto", "error": str(err)}), 500
 
+##ruta de agregar producto
+@app.route('/producto/agregar', methods=['POST'])
+def agregar_producto():
+    data = request.get_json()
+    nombre = data.get('nombre')
+    descripcion = data.get('descripcion')
+    precio = data.get('precio')
+    id_categoria = data.get('id_categoria')  # Nueva columna
+    imagen = data.get('imagen')  # Nueva columna
+
+    # Verificar que todos los datos necesarios están presentes
+    if not all([nombre, descripcion, precio, id_categoria, imagen]):
+        return jsonify({"message": "Faltan datos"}), 400
+
+    # Conexión a la base de datos MySQL
+    conexionMySQL = mysql.connector.connect(
+        host='10.9.120.5',
+        user='kmill',
+        passwd='kmill111',
+        db='kmill'
+    )
+
+    try:
+        cursor = conexionMySQL.cursor()
+
+        # Consulta para insertar el nuevo producto, incluyendo id_categoria y imagen
+        sqlInsert = """
+            INSERT INTO Producto (Nombre, Descripcion, Precio, id_categoria, Imagen)
+            VALUES (%s, %s, %s, %s, %s)
+        """
+        cursor.execute(sqlInsert, (nombre, descripcion, precio, id_categoria, imagen))
+
+        conexionMySQL.commit()  # Confirmar los cambios
+        cursor.close()
+        conexionMySQL.close()
+
+        return jsonify({"message": "Producto agregado exitosamente"}), 201
+    except mysql.connector.Error as err:
+        return jsonify({"message": "Error al agregar el producto", "error": str(err)}), 500
 
 ##ruta de precio
 @app.route('/precio_producto/<int:id>')
