@@ -608,22 +608,22 @@ def cupcake_pedido():
 
 ###############################################################################################################
 
+
 @app.route('/pedidos', methods=['POST'])
 def pedidos():
+    
     data = request.get_json()
-    print("Datos recibidos:", data)  # Para depuración
+    print("Datos recibidos:", data)  
 
     estado = data.get('estado')
     usuario = data.get('usuario')
     fecha = data.get('fecha')
     metodopago = data.get('metodopago')
     ####################################
-    pedido = data.get('pedido')
-    producto = data.get('producto')
-    cantidad = data.get('cantidad')
-    precio = data.get('precio')
+    productos_pedido = data.get('productos')
 
-    if not all([pedido, estado, usuario, fecha, metodopago]):
+
+    if not all([productos_pedido, estado, usuario, fecha, metodopago]):
         return jsonify({"message": "Faltan datos"}), 400
 
     # Conexión a la base de datos MySQL
@@ -637,19 +637,21 @@ def pedidos():
     try:
         cursor = conexionMySQL.cursor()
 
-        # Insertar el usuario en la tabla Usuario
         sqlInsert = """INSERT INTO Pedidos (estado, id_Usuario_rol, fecha_pedido, forma_pago) 
                        VALUES (%s, %s, %s, %s)"""
         cursor.execute(sqlInsert, (estado, usuario, fecha, metodopago))
-        usuario_id = cursor.lastrowid  # Obtener el ID del nuevo usuario insertado
+        pedido_id = cursor.lastrowid  # Obtener el ID del nuevo pedido
 
-        # Insertar el rol en la tabla Usuario_rol
-        sqlInsertRol = """INSERT INTO Detalle_pedido (id_pedidos, id_producto, cantidad, precio_unitario) 
-                          VALUES (%s, %s, %s, %s)"""
-        cursor.execute(sqlInsertRol, (pedido, producto, cantidad, precio))
+        for p in productos_pedido:
+            producto = p.get('producto')
+            cantidad = p.get('cantidad')
+            precio = p.get('precio')
+            sqlInsertRol = """INSERT INTO Detalle_pedido (id_pedidos, id_producto, cantidad, precio_unitario) 
+                            VALUES (%s, %s, %s, %s)"""
+            cursor.execute(sqlInsertRol, (pedido_id, producto, cantidad, precio))
 
         conexionMySQL.commit()  # Confirmar los cambios
-        print(f"Detalle pedido {id} insertado para el pedido {pedido}")
+        print(f"Detalle pedido {id} insertado para el pedido {pedido_id}")
         response = jsonify({"message": "Pedido procesado exitosamente"})
         response.status_code = 201
     except mysql.connector.Error as err:
