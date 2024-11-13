@@ -227,21 +227,28 @@ if __name__ == '__main__':
 
 
 ##### Rutas; 
-@app.route('/ingrediente/<int:id>')
-def ingredient(id):
+@app.route('/ingredientes', methods=['GET'])
+def obtener_ingredientes():
     conexionMySQL = mysql.connector.connect(
         host='10.9.120.5',
         user='kmill',
         passwd='kmill111',
         db='kmill'
-    )    
-    sqlSelect = """SELECT Nombre,id FROM Ingrediente WHERE id = %s"""
-    cursor = conexionMySQL.cursor(dictionary=True)
-    cursor.execute(sqlSelect, (id,))
-    resultadoSQL = cursor.fetchone()
-    cursor.close()
-    conexionMySQL.close()
-    return jsonify(resultadoSQL)
+    )
+
+    try:
+        cursor = conexionMySQL.cursor(dictionary=True)
+        sqlSelect = """SELECT id, Nombre FROM Ingrediente"""
+        cursor.execute(sqlSelect)
+        ingredientes = cursor.fetchall()
+
+        return jsonify({"ingredientes": ingredientes})
+    except mysql.connector.Error as err:
+        return jsonify({"message": "Error al obtener los ingredientes", "error": str(err)}), 500
+    finally:
+        cursor.close()
+        conexionMySQL.close()
+
 ###
 @app.route('/ingrediente_producto/<int:id>', methods=['GET'])
 def ingredientProduct(id):
@@ -444,19 +451,18 @@ def actualizar_producto(id):
         return jsonify({"message": "Producto actualizado exitosamente"}), 200
     except mysql.connector.Error as err:
         return jsonify({"message": "Error al actualizar el producto", "error": str(err)}), 500
-
-##ruta de agregar producto
 @app.route('/producto/agregar', methods=['POST'])
 def agregar_producto():
     data = request.get_json()
     nombre = data.get('nombre')
     descripcion = data.get('descripcion')
     precio = data.get('precio')
-    id_categoria = data.get('id_categoria')  # Nueva columna
-    imagen = data.get('imagen')  # Nueva columna
+    id_categoria = data.get('id_categoria')
+    imagen = data.get('imagen')
+    ingredientes_seleccionados = data.get('ingredientes')  # Ingredientes seleccionados
 
     # Verificar que todos los datos necesarios están presentes
-    if not all([nombre, descripcion, precio, id_categoria, imagen]):
+    if not all([nombre, descripcion, precio, id_categoria, imagen, ingredientes_seleccionados]):
         return jsonify({"message": "Faltan datos"}), 400
 
     # Conexión a la base de datos MySQL
@@ -470,20 +476,73 @@ def agregar_producto():
     try:
         cursor = conexionMySQL.cursor()
 
-        # Consulta para insertar el nuevo producto, incluyendo id_categoria y imagen
+        # Insertar el nuevo producto
         sqlInsert = """
             INSERT INTO Producto (Nombre, Descripcion, Precio, id_categoria, Imagen)
             VALUES (%s, %s, %s, %s, %s)
         """
         cursor.execute(sqlInsert, (nombre, descripcion, precio, id_categoria, imagen))
 
-        conexionMySQL.commit()  # Confirmar los cambios
+        # Obtener el ID del nuevo producto insertado
+        id_Producto = cursor.lastrowid
+
+        # Insertar los ingredientes seleccionados en la tabla de relación Ingredientes_Productos
+        for id_ingrediente in ingredientes_seleccionados:
+            sqlInsertIngrediente = """
+                INSERT INTO Ingredientes_Productos (id_Producto, id_ingredientes)
+                VALUES (%s, %s)
+            """
+            cursor.execute(sqlInsertIngrediente, (id_Producto, id_ingrediente))
+
+        conexionMySQL.commit()  # Confirmar cambios
+        return jsonify({"message": "Producto y sus ingredientes agregados exitosamente"}), 201
+    except mysql.connector.Error as err:
+        return jsonify({"message": "Error al agregar el producto", "error": str(err)}), 500
+    finally:
         cursor.close()
         conexionMySQL.close()
 
-        return jsonify({"message": "Producto agregado exitosamente"}), 201
+##ruta de eliminar producto
+@app.route('/productoEliminar/<int:id>', methods=['DELETE'])
+def eliminar_producto(id):
+    # Conexión a la base de datos MySQL
+    conexionMySQL = mysql.connector.connect(
+        host='10.9.120.5',
+        user='kmill',
+        passwd='kmill111',
+        db='kmill'
+    )
+
+    try:
+        cursor = conexionMySQL.cursor()
+
+        # Verificar si el producto existe en la base de datos
+        sqlSelect = """SELECT * FROM Producto WHERE id = %s"""
+        cursor.execute(sqlSelect, (id,))
+        producto = cursor.fetchone()
+
+        if not producto:
+            return jsonify({"message": "Producto no encontrado"}), 404
+
+        # Primero, eliminamos los registros dependientes en Ingredientes_Productos
+        sqlDeleteIngredientesProductos = """DELETE FROM Ingredientes_Productos WHERE id_Producto = %s"""
+        cursor.execute(sqlDeleteIngredientesProductos, (id,))
+        
+        
+        # Eliminar el producto de la base de datos
+        sqlDelete = """DELETE FROM Producto WHERE id = %s"""
+        cursor.execute(sqlDelete, (id,))
+        conexionMySQL.commit()  # Confirmar los cambios
+
+        # Responder con un mensaje de éxito
+        return jsonify({"message": "Producto eliminado exitosamente"}), 200
     except mysql.connector.Error as err:
-        return jsonify({"message": "Error al agregar el producto", "error": str(err)}), 500
+        # Si hay un error, devolver mensaje adecuado
+        return jsonify({"message": "Error al eliminar el producto", "error": str(err)}), 500
+    finally:
+        cursor.close()
+        conexionMySQL.close()
+
 
 ##ruta de precio
 @app.route('/precio_producto/<int:id>')
