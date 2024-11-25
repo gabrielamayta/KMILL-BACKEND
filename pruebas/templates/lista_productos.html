@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Productos</title>
+</head>
+<body>
+
+    <h1>Lista de Productos</h1>
+    
+    <div>
+        {% for producto in productos %}
+        <div style="border: 1px solid #ccc; padding: 5px; margin: 5px 0;">
+            <h2>{{ producto.Nombre }}</h2>
+            <p>Precio: ${{ producto.Precio }}</p>
+          <img width="120px" height="120px" src="/static/oreo.png" alt="{{ producto.Nombre }}" />
+          <img width="120px" height="120px" src="/static/rocklet.png" alt="{{ producto.Nombre }}" />
+          <img width="120px" height="120px" src="/static/mani.png" alt="{{ producto.Nombre }}" />
+          <img width="120px" height="120px" src="/static/chocolina.png" alt="{{ producto.Nombre }}" />
+          <img width="120px" height="120px" src="/static/cookiechips.png" alt="{{ producto.Nombre }}" />
+          <img width="120px" height="120px" src="/static/maicena.png" alt="{{ producto.Nombre }}" />
+          <img src="/static/alfajorchocolate.png" alt="{{ producto.Nombre }}" />
+
+            <br>
+        </div>
+        {% endfor %}
+    </div>
+
+</body>
+</html>

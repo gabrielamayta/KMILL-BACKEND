@@ -1,6 +1,6 @@
 import jwt
 import datetime
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 import mysql.connector
 from flask_cors import CORS
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -92,8 +92,17 @@ def detalle_producto(id):
         return jsonify({"error": "Producto no encontrado"}), 404
 
 # Ruta para obtener todos los productos
-@app.route('/jsonproducto')
-def producto():
+from flask import Flask, render_template, jsonify
+import mysql.connector
+
+app = Flask(__name__)
+
+
+
+
+# Ruta para obtener todos los productos en formato JSON
+@app.route('/api/producto')
+def obtener_productos_json():
     conexionMySQL = mysql.connector.connect(
         host='10.9.120.5',
         user='kmill',
@@ -108,6 +117,36 @@ def producto():
     cursor.close()
     conexionMySQL.close()
     return jsonify(productos)
+
+
+# Ruta para mostrar los productos en una plantilla HTML
+@app.route('/producto')
+def obtener_productos_html():
+    conexionMySQL = mysql.connector.connect(
+        host='10.9.120.5',
+        user='kmill',
+        passwd='kmill111',
+        db='kmill'
+    )
+    cursor = conexionMySQL.cursor(dictionary=True)
+    sqlSelect = """SELECT * FROM Producto"""
+    cursor.execute(sqlSelect)
+    productos = cursor.fetchall()
+    
+    cursor.close()
+    conexionMySQL.close()
+    return render_template('lista_productos.html', productos=productos)
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+
+
+
+
+
+
 
 # Ruta para obtener un producto y sus ingredientes
 @app.route('/producto_ingrediente/<int:id>') 
@@ -816,3 +855,8 @@ def Roles(id):
     return jsonify(resultadoSQL)
 
 print(app.url_map)
+
+
+
+
+
