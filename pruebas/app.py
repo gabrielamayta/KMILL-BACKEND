@@ -100,7 +100,7 @@ app = Flask(__name__)
 
 
 
-# Ruta para obtener todos los productos en formato JSON
+# ruta para obtener todos los productos en formato JSON
 @app.route('/api/producto')
 def obtener_productos_json():
     conexionMySQL = mysql.connector.connect(
@@ -119,7 +119,7 @@ def obtener_productos_json():
     return jsonify(productos)
 
 
-# Ruta para mostrar los productos en una plantilla HTML
+# ruta para mostrar los productos en una plantilla HTML
 @app.route('/producto')
 def obtener_productos_html():
     conexionMySQL = mysql.connector.connect(
