@@ -138,6 +138,35 @@ def obtener_productos_html():
     return render_template('lista_productos.html', productos=productos)
 
 
+@app.route('/ingredientes/<int:id>') 
+def producto_ingrediente(id):
+    conexionMySQL = mysql.connector.connect(
+        host='10.9.120.5',
+        user='kmill',
+        passwd='kmill111',
+        db='kmill'
+    )
+    cursor = conexionMySQL.cursor()
+
+    # Obtener el nombre del producto
+    qProducto = """SELECT Nombre FROM Producto WHERE id = %s"""
+    cursor.execute(qProducto, (id,))
+    product = cursor.fetchone()
+
+    # Obtener los ingredientes relacionados con el producto
+    qIngrediente = """
+        SELECT i.Nombre 
+        FROM Ingrediente i
+        INNER JOIN Ingredientes_Productos ip ON i.id = ip.id_Ingredientes
+        WHERE ip.id_Producto = %s
+    """
+    cursor.execute(qIngrediente, (id,))
+    ingredientes = cursor.fetchall()
+
+    cursor.close()
+    conexionMySQL.close()
+    return render_template('ingredientes.html', pro=product, ingre = ingredientes)
+
 if __name__ == '__main__':
     app.run(debug=True)
 
@@ -149,7 +178,7 @@ if __name__ == '__main__':
 
 
 # Ruta para obtener un producto y sus ingredientes
-@app.route('/producto_ingrediente/<int:id>') 
+@app.route('/api/producto_ingrediente/<int:id>') 
 def producto_ingrediente(id):
     conexionMySQL = mysql.connector.connect(
         host='10.9.120.5',
