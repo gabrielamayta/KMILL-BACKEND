@@ -3,24 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ingredientes de {{ pro.Nombre }}</title>
+    <title>Ingredientes</title>
 </head>
 <body>
         <h1>Ingredientes</h1>
         <h2>Lista de Ingredientes:</h2>
         <ul>
-            <li>Manteca</li>
-            <li>Azúcar</li>
-            <li>Harina</li>
-            <li>Polvo de hornear</li>
-            <li>Huevos</li>
-            <li>Esencia de vainilla</li>
-        </ul>
-            {% for ingrediente in ingre %}
-            <li>{{ ingrediente.Nombre }}</li>
+    
+            {% for i in ing %}
+            <li>{{ i['Nombre'] }}</li>
             {% endfor %}
         </ul>
-    </div>
+
 
     <!--<a href="/lista_productos">← Volver a la lista de productos</a>-->
 </body>

@@ -91,15 +91,6 @@ def detalle_producto(id):
     else:
         return jsonify({"error": "Producto no encontrado"}), 404
 
-# Ruta para obtener todos los productos
-from flask import Flask, render_template, jsonify
-import mysql.connector
-
-app = Flask(__name__)
-
-
-
-
 # ruta para obtener todos los productos en formato JSON
 @app.route('/api/producto')
 def obtener_productos_json():
@@ -138,34 +129,66 @@ def obtener_productos_html():
     return render_template('lista_productos.html', productos=productos)
 
 
-@app.route('/ingredientes/<int:id>') 
-def producto_ingrediente(id):
+
+@app.route('/ingredientes/<int:id>')
+def producto_ingredientes(id):
     conexionMySQL = mysql.connector.connect(
         host='10.9.120.5',
         user='kmill',
         passwd='kmill111',
         db='kmill'
     )
-    cursor = conexionMySQL.cursor()
-
-    # Obtener el nombre del producto
-    qProducto = """SELECT Nombre FROM Producto WHERE id = %s"""
-    cursor.execute(qProducto, (id,))
-    product = cursor.fetchone()
-
-    # Obtener los ingredientes relacionados con el producto
-    qIngrediente = """
-        SELECT i.Nombre 
-        FROM Ingrediente i
-        INNER JOIN Ingredientes_Productos ip ON i.id = ip.id_Ingredientes
-        WHERE ip.id_Producto = %s
+    cursor = conexionMySQL.cursor(dictionary=True)
+    
+    # Obtener los ingredientes del producto con el id
+    qIngre = """
+    SELECT i.Nombre 
+    FROM Ingrediente i
+    JOIN producto_ingrediente pi ON pi.ingrediente_id = i.id
+    WHERE pi.producto_id = %s
     """
-    cursor.execute(qIngrediente, (id,))
+    cursor.execute(qIngre, (id,))
     ingredientes = cursor.fetchall()
+    
+
+    # Obtener información del producto (opcional)
+    qProducto = "SELECT Nombre FROM Producto WHERE id = %s"
+    cursor.execute(qProducto, (id,))
+    producto = cursor.fetchone()
 
     cursor.close()
     conexionMySQL.close()
-    return render_template('ingredientes.html', pro=product, ingre = ingredientes)
+
+    # Pasar los datos al template
+    return render_template('detalle_produc.html', ing=ingredientes, producto=producto)
+
+
+
+
+
+
+
+
+
+@app.route('/ingredientes') 
+def lista_ingredientes():
+    conexionMySQL = mysql.connector.connect(
+        host='10.9.120.5',
+        user='kmill',
+        passwd='kmill111',
+        db='kmill'
+    )
+    cursor = conexionMySQL.cursor(dictionary=True)
+
+    # Obtener el nombre del producto
+    qIngre = """SELECT Nombre FROM Ingrediente"""
+    cursor.execute(qIngre)
+    ingredient = cursor.fetchall()
+    print(ingredient)
+    
+    cursor.close()
+    conexionMySQL.close()
+    return render_template('ingredientes.html', ing=ingredient)
 
 if __name__ == '__main__':
     app.run(debug=True)
