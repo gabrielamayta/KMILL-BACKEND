@@ -139,28 +139,34 @@ def producto_ingredientes(id):
         db='kmill'
     )
     cursor = conexionMySQL.cursor(dictionary=True)
-    
+
     # Obtener los ingredientes del producto con el id
     qIngre = """
-    SELECT i.Nombre 
+    SELECT i.Nombre, p.id as IdPro 
     FROM Ingrediente i
-    JOIN producto_ingrediente pi ON pi.ingrediente_id = i.id
-    WHERE pi.producto_id = %s
+    JOIN Ingredientes_Productos ip ON ip.id_Ingredientes = i.id
+    JOIN Producto p ON ip.id_Producto = p.id
+    WHERE p.id = %s  -- Filtramos por el id del producto
     """
     cursor.execute(qIngre, (id,))
     ingredientes = cursor.fetchall()
-    
 
-    # Obtener información del producto (opcional)
-    qProducto = "SELECT Nombre FROM Producto WHERE id = %s"
-    cursor.execute(qProducto, (id,))
-    producto = cursor.fetchone()
+    qNombre= """
+    SELECT Nombre 
+    FROM Producto
+    WHERE id = %s
+"""
+    cursor.execute(qNombre, (id,))
+    producto = cursor.fetchone()   
+
 
     cursor.close()
     conexionMySQL.close()
 
-    # Pasar los datos al template
-    return render_template('detalle_produc.html', ing=ingredientes, producto=producto)
+    if ingredientes:
+        return render_template('ingredientes_producto.html', prod=producto, ing=ingredientes)
+    else:
+        return "No se encontraron ingredientes para este producto", 404
 
 
 

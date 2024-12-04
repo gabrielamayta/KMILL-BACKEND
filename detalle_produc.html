@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Detalle</title>
+  </head>
+  <body>
+    <main>
+      <h1>{{ ingredientes }}</h1>
+      <ul>
+        {% for n in ingredientes %}
+        <li>
+          <a href="{{ url_for('producto_ingredientes', id=n['IdPro']) }}">
+            {{ n['Name'] }}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </main>
+  </body>
+</html>

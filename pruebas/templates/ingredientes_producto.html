@@ -3,20 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ingredientes</title>
+    <title>{{prod["Nombre"]}}</title>
   </head>
   <body>
-    <h1>Ingredientes</h1>
+    <h1>{{prod["Nombre"]}}</h1>
     <h2>Lista de Ingredientes:</h2>
     <ul>
       {% for i in ing %}
       <li>{{ i['Nombre'] }}</li>
-      <a href="">Borrar</a>
-      <a href="">Editar</a>
       {% endfor %}
     </ul>
     <a href="{{ url_for('obtener_productos_html') }}">Volver atrás</a>
-    <input type="text" name="Nombre" />
-    <a href="">Agregar</a>
   </body>
 </html>
