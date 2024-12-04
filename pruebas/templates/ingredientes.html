@@ -3,30 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ingredientes de {{ producto.Nombre }}</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        .ingredientes {
-            margin-top: 20px;
-        }
-        .ingredientes li {
-            margin-bottom: 5px;
-        }
-    </style>
+    <title>Ingredientes de {{ pro.Nombre }}</title>
 </head>
 <body>
-
+        <h1>Ingredientes</h1>
         <h2>Lista de Ingredientes:</h2>
         <ul>
-            {% for ingrediente in ingredientes %}
-            <li>{{ ingrediente.nombre }}</li>
+            <li>Manteca</li>
+            <li>Azúcar</li>
+            <li>Harina</li>
+            <li>Polvo de hornear</li>
+            <li>Huevos</li>
+            <li>Esencia de vainilla</li>
+        </ul>
+            {% for ingrediente in ingre %}
+            <li>{{ ingrediente.Nombre }}</li>
             {% endfor %}
         </ul>
     </div>
 
-    <a href="/producto">← Volver a la lista de productos</a>
+    <!--<a href="/lista_productos">← Volver a la lista de productos</a>-->
 </body>
 </html>
