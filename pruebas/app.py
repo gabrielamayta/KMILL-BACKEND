@@ -1,203 +1,208 @@
 import jwt
 import datetime
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request, render_template, redirect, url_for
 import mysql.connector
 from flask_cors import CORS
 from werkzeug.security import check_password_hash, generate_password_hash
-#Conexión con el servidor MySQL Server
+import os
 
+# Configuración de la aplicación
 app = Flask(__name__)
 CORS(app)
 
-#@app.route('/Pedidos')
-#def pedidos():
-#    conexionMySQL = mysql.connector.connect(
-#        host='10.9.120.5',
-#        user='kmill',
-#        passwd='kmill111',
-#        db='kmill'
-#    )
-#    #Consulta SQL que ejecutaremos, en este caso un select
-#    sqlSelect = """SELECT * FROM Pedido""" 
-#    #Establecemos un db para la conexión con el servidor MySQL
-#    db = conexionMySQL.cursor()
-#    #A partir del db, ejecutamos la consulta SQL
-#    db.execute(sqlSelect)
-#    #Guardamos el resultado de la consulta en una variable
-#    resultadoSQL = db.fetchall()
-#
-#    #Cerramos el db y la conexión con MySQL
-#    db.close()
-#    conexionMySQL.close()
-#    return jsonify(resultadoSQL)
+# Variables de entorno para la base de datos
+db_host = os.getenv("DB_HOST", "10.9.120.5")
+db_user = os.getenv("DB_USER", "kmill")
+db_password = os.getenv("DB_PASSWORD", "kmill111")
+db_name = os.getenv("DB_NAME", "kmill")
 
-
-
-@app.route('/Pedido', methods = ('PUT',))
-def detalle_pedido(id):
-    conexionMySQL = mysql.connector.connect(
-        host='10.9.120.5',
-        user='kmill',
-        passwd='kmill111',
-        db='kmill'
+# Función para obtener la conexión a la base de datos
+def get_db_connection():
+    return mysql.connector.connect(
+        host=db_host,
+        user=db_user,
+        passwd=db_password,
+        db=db_name
     )
-    #Consulta 1
-    qpedido = """SELECT id FROM Pedidos WHERE id = %s"""
-    db = conexionMySQL.cursor(dictionary=True)
-    db.execute(qpedido, (id,))
-    nropedido = db.fetchone()['id']
 
-    #Consulta 2
-    qdetalle_pedido = """SELECT * FROM Detalle_pedido WHERE id = %s"""
-    db.execute(qdetalle_pedido, (id,))
-    detalle_pedido = list(db)
-
-    #Cerramos el db y la conexión con MySQL
-    db.close()
-    conexionMySQL.close()
-    
-    result = {"pedido": nropedido, "detalle pedido": detalle_pedido }
-    return jsonify(result)
-
-
-
-
-
-# Mika codigo 
-
-
-
-
-
-
-@app.route('/producto/<int:id>') 
-def detalle_producto(id):
-    conexionMySQL = mysql.connector.connect(
-        host='10.9.120.5',
-        user='kmill',
-        passwd='kmill111',
-        db='kmill'
-    )
-    sqlSelect = """SELECT Nombre FROM Producto WHERE id = %s"""
-    cursor = conexionMySQL.cursor()
-    cursor.execute(sqlSelect, (id,))
-    resultadoSQL = cursor.fetchone()
-
+# Función para cerrar la conexión
+def close_db_connection(cursor, connection):
     cursor.close()
-    conexionMySQL.close()
-    
-    if resultadoSQL:
-        return jsonify({"titulo": resultadoSQL[0]})
-    else:
-        return jsonify({"error": "Producto no encontrado"}), 404
+    connection.close()
 
-# ruta para obtener todos los productos en formato JSON
+# Ruta para obtener el detalle del pedido
+@app.route('/Pedido/<int:id>', methods=['PUT'])
+def detalle_pedido(id):
+    try:
+        conexionMySQL = get_db_connection()
+        cursor = conexionMySQL.cursor(dictionary=True)
+
+        # Consulta 1
+        qpedido = """SELECT id FROM Pedidos WHERE id = %s"""
+        cursor.execute(qpedido, (id,))
+        nropedido = cursor.fetchone()
+
+        if not nropedido:
+            return jsonify({"error": "Pedido no encontrado"}), 404
+
+        # Consulta 2
+        qdetalle_pedido = """SELECT * FROM Detalle_pedido WHERE id = %s"""
+        cursor.execute(qdetalle_pedido, (id,))
+        detalle_pedido = cursor.fetchall()
+
+        close_db_connection(cursor, conexionMySQL)
+
+        result = {"pedido": nropedido['id'], "detalle_pedido": detalle_pedido}
+        return jsonify(result)
+
+    except mysql.connector.Error as err:
+        return jsonify({"error": f"Error en la base de datos: {err}"}), 500
+
+# Ruta para obtener el detalle de un producto
+@app.route('/producto/<int:id>')
+def detalle_producto(id):
+    try:
+        conexionMySQL = get_db_connection()
+        cursor = conexionMySQL.cursor()
+
+        sqlSelect = """SELECT Nombre FROM Producto WHERE id = %s"""
+        cursor.execute(sqlSelect, (id,))
+        resultadoSQL = cursor.fetchone()
+
+        close_db_connection(cursor, conexionMySQL)
+
+        if resultadoSQL:
+            return jsonify({"titulo": resultadoSQL[0]})
+        else:
+            return jsonify({"error": "Producto no encontrado"}), 404
+
+    except mysql.connector.Error as err:
+        return jsonify({"error": f"Error en la base de datos: {err}"}), 500
+
+# Ruta para obtener todos los productos en formato JSON
 @app.route('/api/producto')
 def obtener_productos_json():
-    conexionMySQL = mysql.connector.connect(
-        host='10.9.120.5',
-        user='kmill',
-        passwd='kmill111',
-        db='kmill'
-    )
-    cursor = conexionMySQL.cursor(dictionary=True)
-    sqlSelect = """SELECT * FROM Producto"""
-    cursor.execute(sqlSelect)
-    productos = cursor.fetchall()
-    
-    cursor.close()
-    conexionMySQL.close()
-    return jsonify(productos)
+    try:
+        conexionMySQL = get_db_connection()
+        cursor = conexionMySQL.cursor(dictionary=True)
 
+        sqlSelect = """SELECT * FROM Producto"""
+        cursor.execute(sqlSelect)
+        productos = cursor.fetchall()
 
-# ruta para mostrar los productos en una plantilla HTML
+        close_db_connection(cursor, conexionMySQL)
+        return jsonify(productos)
+
+    except mysql.connector.Error as err:
+        return jsonify({"error": f"Error en la base de datos: {err}"}), 500
+
+# Ruta para mostrar los productos en una plantilla HTML
 @app.route('/producto')
 def obtener_productos_html():
-    conexionMySQL = mysql.connector.connect(
-        host='10.9.120.5',
-        user='kmill',
-        passwd='kmill111',
-        db='kmill'
-    )
-    cursor = conexionMySQL.cursor(dictionary=True)
-    sqlSelect = """SELECT * FROM Producto"""
-    cursor.execute(sqlSelect)
-    productos = cursor.fetchall()
-    
-    cursor.close()
-    conexionMySQL.close()
-    return render_template('lista_productos.html', productos=productos)
+    try:
+        conexionMySQL = get_db_connection()
+        cursor = conexionMySQL.cursor(dictionary=True)
 
+        sqlSelect = """SELECT * FROM Producto"""
+        cursor.execute(sqlSelect)
+        productos = cursor.fetchall()
 
+        close_db_connection(cursor, conexionMySQL)
+        return render_template('lista_productos.html', productos=productos)
 
+    except mysql.connector.Error as err:
+        return jsonify({"error": f"Error en la base de datos: {err}"}), 500
+
+# Ruta para obtener los ingredientes de un producto
 @app.route('/ingredientes/<int:id>')
 def producto_ingredientes(id):
-    conexionMySQL = mysql.connector.connect(
-        host='10.9.120.5',
-        user='kmill',
-        passwd='kmill111',
-        db='kmill'
-    )
-    cursor = conexionMySQL.cursor(dictionary=True)
+    try:
+        conexionMySQL = get_db_connection()
+        cursor = conexionMySQL.cursor(dictionary=True)
 
-    # Obtener los ingredientes del producto con el id
-    qIngre = """
-    SELECT i.Nombre, p.id as IdPro 
-    FROM Ingrediente i
-    JOIN Ingredientes_Productos ip ON ip.id_Ingredientes = i.id
-    JOIN Producto p ON ip.id_Producto = p.id
-    WHERE p.id = %s  -- Filtramos por el id del producto
-    """
-    cursor.execute(qIngre, (id,))
-    ingredientes = cursor.fetchall()
+        # Obtener los ingredientes del producto con el id
+        qIngre = """
+        SELECT i.Nombre, p.id as IdPro 
+        FROM Ingrediente i
+        JOIN Ingredientes_Productos ip ON ip.id_Ingredientes = i.id
+        JOIN Producto p ON ip.id_Producto = p.id
+        WHERE p.id = %s  -- Filtramos por el id del producto
+        """
+        cursor.execute(qIngre, (id,))
+        ingredientes = cursor.fetchall()
 
-    qNombre= """
-    SELECT Nombre 
-    FROM Producto
-    WHERE id = %s
-"""
-    cursor.execute(qNombre, (id,))
-    producto = cursor.fetchone()   
+        qNombre = """
+        SELECT Nombre 
+        FROM Producto
+        WHERE id = %s
+        """
+        cursor.execute(qNombre, (id,))
+        producto = cursor.fetchone()
 
+        close_db_connection(cursor, conexionMySQL)
 
-    cursor.close()
-    conexionMySQL.close()
+        if ingredientes:
+            return render_template('ingredientes_producto.html', prod=producto, ing=ingredientes)
+        else:
+            return "No se encontraron ingredientes para este producto", 404
 
-    if ingredientes:
-        return render_template('ingredientes_producto.html', prod=producto, ing=ingredientes)
-    else:
-        return "No se encontraron ingredientes para este producto", 404
+    except mysql.connector.Error as err:
+        return jsonify({"error": f"Error en la base de datos: {err}"}), 500
 
+# Ruta para borrar un ingrediente
+@app.route('/borrar_ingrediente/<int:id>', methods=['DELETE'])
+def borrar_ingrediente(id):
+    try:
+        conexionMySQL = get_db_connection()
+        cursor = conexionMySQL.cursor()
 
+        # Eliminar el ingrediente de la tabla Ingrediente
+        sqlDelete = """DELETE FROM Ingrediente WHERE id = %s"""
+        cursor.execute(sqlDelete, (id,))
+        conexionMySQL.commit()  # Confirmar la eliminación
 
+        close_db_connection(cursor, conexionMySQL)
 
+        # Redirigir a la lista de ingredientes después de borrar
+        return redirect(url_for('lista_ingredientes'))
 
+    except mysql.connector.Error as err:
+        return jsonify({"error": f"Error en la base de datos: {err}"}), 500
 
+# Función de autenticación con JWT
+@app.route('/login', methods=['POST'])
+def login():
+    username = request.json.get('username')
+    password = request.json.get('password')
 
+    # Verificar las credenciales (esto es solo un ejemplo)
+    if username == "admin" and password == "admin123":
+        token = jwt.encode({"user_id": 1, "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)}, 
+                           app.config["SECRET_KEY"], algorithm="HS256")
+        return jsonify({"token": token})
 
+    return jsonify({"error": "Credenciales incorrectas"}), 401
 
-@app.route('/ingredientes') 
-def lista_ingredientes():
-    conexionMySQL = mysql.connector.connect(
-        host='10.9.120.5',
-        user='kmill',
-        passwd='kmill111',
-        db='kmill'
-    )
-    cursor = conexionMySQL.cursor(dictionary=True)
+# Ruta protegida por JWT
+@app.route('/protected', methods=['GET'])
+def protected():
+    token = request.headers.get('Authorization')
 
-    # Obtener el nombre del producto
-    qIngre = """SELECT Nombre FROM Ingrediente"""
-    cursor.execute(qIngre)
-    ingredient = cursor.fetchall()
-    print(ingredient)
-    
-    cursor.close()
-    conexionMySQL.close()
-    return render_template('ingredientes.html', ing=ingredient)
+    if not token:
+        return jsonify({"error": "Token requerido"}), 401
+
+    try:
+        data = jwt.decode(token, app.config["SECRET_KEY"], algorithms=["HS256"])
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Token expirado"}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Token inválido"}), 401
+
+    return jsonify({"message": f"Bienvenido usuario {data['user_id']}"}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
+
 
 
 

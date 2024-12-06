@@ -10,13 +10,21 @@
     <h2>Lista de Ingredientes:</h2>
     <ul>
       {% for i in ing %}
-      <li>{{ i['Nombre'] }}</li>
-      <a href="">Borrar</a>
-      <a href="">Editar</a>
+      <li>
+        {{ i['Nombre'] }}
+        <!-- Botón de borrar -->
+        <form action="{{ url_for('borrar_ingrediente', id=i['id']) }}" method="POST" style="display:inline;">
+          <button type="submit">Borrar</button>
+        </form>
+        <!-- Botón de editar -->
+        <form action="{{ url_for('editar_ingrediente', id=i['id']) }}" method="GET" style="display:inline;">
+          <button type="submit">Editar</button>
+        </form>        
+      </li>
       {% endfor %}
     </ul>
+    <a href="{{ url_for('agregar_ingrediente_form') }}">Agregar nuevo ingrediente</a> <!-- Enlace al formulario de agregar ingrediente -->
+    <br>
     <a href="{{ url_for('obtener_productos_html') }}">Volver atrás</a>
-    <input type="text" name="Nombre" />
-    <a href="">Agregar</a>
   </body>
 </html>

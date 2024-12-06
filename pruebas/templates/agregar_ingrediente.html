@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agregar Ingrediente</title>
+  </head>
+  <body>
+    <h1>Agregar Ingrediente</h1>
+    <form action="{{ url_for('agregar_ingrediente') }}" method="POST">
+      <label for="nombre">Nombre del ingrediente:</label>
+      <input type="text" id="nombre" name="nombre" required />
+      <button type="submit">Agregar</button>
+    </form>
+    <br>
+    <a href="{{ url_for('obtener_ingredientes') }}">Volver a la lista de ingredientes</a>
+  </body>
+</html>
